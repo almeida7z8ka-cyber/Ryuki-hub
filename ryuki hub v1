@@ -93,9 +93,6 @@ local function normalizeRank(text)
 end
 
 local function getPlayerRank()
-    -- Método específico para Volleyball Legends
-    
-    -- 1. Procura no PlayerGui (gui do jogador)
     local playerGui = Player:FindFirstChild("PlayerGui")
     if playerGui then
         for _, screenGui in ipairs(playerGui:GetChildren()) do
@@ -103,12 +100,10 @@ local function getPlayerRank()
                 if element:IsA("TextLabel") or element:IsA("TextButton") then
                     local text = normalizeRank(element.Text)
                     if RANK_VALUES[text] then
-                        print("[Ryuky] Rank encontrado na GUI: " .. text)
                         return text
                     end
                     for rankName, _ in pairs(RANK_VALUES) do
                         if text:find(rankName) then
-                            print("[Ryuky] Rank encontrado na GUI (parcial): " .. rankName)
                             return rankName
                         end
                     end
@@ -116,86 +111,37 @@ local function getPlayerRank()
             end
         end
     end
-    
-    -- 2. Procura em ReplicatedStorage
-    local replicatedStorage = game:GetService("ReplicatedStorage")
-    for _, folder in ipairs(replicatedStorage:GetChildren()) do
-        if folder:IsA("Folder") and (folder.Name:lower():find("rank") or folder.Name:lower():find("season") or folder.Name:lower():find("player")) then
-            for _, obj in ipairs(folder:GetDescendants()) do
-                if obj:IsA("StringValue") then
-                    local val = normalizeRank(obj.Value)
-                    if RANK_VALUES[val] then
-                        print("[Ryuky] Rank encontrado no ReplicatedStorage: " .. val)
-                        return val
-                    end
-                elseif obj:IsA("IntValue") then
-                    for rankName, rankNum in pairs(RANK_VALUES) do
-                        if rankNum == obj.Value then
-                            print("[Ryuky] Rank numérico no ReplicatedStorage: " .. rankName)
-                            return rankName
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 3. Procura no workspace
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("SurfaceGui") or obj:IsA("BillboardGui") then
-            for _, element in ipairs(obj:GetDescendants()) do
-                if element:IsA("TextLabel") then
-                    local text = normalizeRank(element.Text)
-                    for rankName, _ in pairs(RANK_VALUES) do
-                        if text:find(rankName) then
-                            print("[Ryuky] Rank encontrado no mundo: " .. rankName)
-                            return rankName
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 4. Tenta via RemoteFunction
-    local seasonService = replicatedStorage:FindFirstChild("Packages"):FindFirstChild("_Index"):FindFirstChild("sleitnick_knit@1.7.0"):FindFirstChild("knit"):FindFirstChild("Services"):FindFirstChild("SeasonService")
-    if seasonService then
-        local getRankRF = seasonService:FindFirstChild("RF"):FindFirstChild("GetPlayerRank") or seasonService:FindFirstChild("RF"):FindFirstChild("GetRank")
-        if getRankRF then
-            local success, result = pcall(function()
-                return getRankRF:InvokeServer()
-            end)
-            if success and result then
-                local val = normalizeRank(tostring(result))
-                if RANK_VALUES[val] then
-                    print("[Ryuky] Rank obtido via RemoteFunction: " .. val)
-                    return val
-                end
-            end
-        end
-    end
-    
     return nil
 end
 
 local function getBestReward(rewardType)
-    local playerRank = getPlayerRank()
+    local playerRank = nil
     
-    if not playerRank and manualRank then
+    -- PRIMEIRO: tenta detectar automaticamente
+    local autoRank = getPlayerRank()
+    
+    -- SEGUNDO: se não detectou, usa o manual
+    if autoRank then
+        playerRank = autoRank
+        print("[Ryuky] Rank automático: " .. playerRank)
+    elseif manualRank then
         playerRank = manualRank
-        print("[Ryuky] Usando rank manual: " .. playerRank)
-    end
-    
-    if not playerRank then
-        print("[Ryuky] Nenhum rank encontrado! Usando recompensa básica (Bronze I)")
+        print("[Ryuky] Rank manual: " .. playerRank)
+    else
+        print("[Ryuky] Nenhum rank definido! Usando Bronze I")
         return RANK_REWARDS[rewardType][1] or 1
     end
     
+    -- Converte o nome do rank para número
     local rankNumber = RANK_VALUES[playerRank]
     if not rankNumber then
+        print("[Ryuky] ERRO: Rank '" .. playerRank .. "' não encontrado na tabela!")
         return RANK_REWARDS[rewardType][1] or 1
     end
     
+    print("[Ryuky] Rank: " .. playerRank .. " (número " .. rankNumber .. ")")
+    
+    -- Encontra a melhor recompensa para esse rank
     local bestReward = nil
     local rewards = RANK_REWARDS[rewardType]
     
@@ -208,9 +154,10 @@ local function getBestReward(rewardType)
     end
     
     if bestReward then
-        print(string.format("[Ryuky] Rank %s (nível %d) detectado! Recompensa: %d", playerRank, rankNumber, bestReward))
+        print("[Ryuky] ✅ Recompensa final: " .. bestReward)
         return bestReward
     else
+        print("[Ryuky] ❌ Nenhuma recompensa encontrada, usando básico")
         return rewards[1] or 1
     end
 end
@@ -588,7 +535,7 @@ AbaFarm:CreateToggle({
                     local bestInvoke = getBestReward("LUCKY")
                     pcall(function()
                         SeasonServiceRF:InvokeServer(bestInvoke)
-                        print("[Ryuky] Lucky Spins coletados com rank máximo!")
+                        print("[Ryuky] Lucky Spins coletados!")
                     end)
                 end
                 task.wait(0.5)
@@ -607,7 +554,7 @@ AbaFarm:CreateToggle({
                     local bestInvoke = getBestReward("YEN")
                     pcall(function()
                         SeasonServiceRF:InvokeServer(bestInvoke)
-                        print("[Ryuky] Yen coletado com rank máximo!")
+                        print("[Ryuky] Yen coletado!")
                     end)
                 end
                 task.wait(0.6)
@@ -626,12 +573,31 @@ AbaFarm:CreateToggle({
                     local bestInvoke = getBestReward("HABILIDADE")
                     pcall(function()
                         SeasonServiceRF:InvokeServer(bestInvoke)
-                        print("[Ryuky] Habilidades coletadas com rank máximo!")
+                        print("[Ryuky] Habilidades coletadas!")
                     end)
                 end
                 task.wait(1.5)
             end
         end)
+    end
+})
+
+-- BOTÃO DE TESTE
+AbaFarm:CreateButton({
+    Name = "TESTAR DETECÇÃO DE RANK",
+    Callback = function()
+        print("====================")
+        print("TESTE DE DETECÇÃO")
+        print("Rank manual: " .. (manualRank or "NÃO DEFINIDO"))
+        
+        local lucky = getBestReward("LUCKY")
+        local yen = getBestReward("YEN")
+        local hab = getBestReward("HABILIDADE")
+        
+        print("LUCKY: InvokeServer(" .. lucky .. ")")
+        print("YEN: InvokeServer(" .. yen .. ")")
+        print("HABILIDADE: InvokeServer(" .. hab .. ")")
+        print("====================")
     end
 })
 
@@ -730,7 +696,8 @@ AbaComoUsar:CreateLabel("2. Ajuste a Hitbox da Bola digitando valores estritos d
 AbaComoUsar:CreateLabel("3. Use a aba Personagem para ativar pulos direcionais e movimentacao livre durante o voo da bola.", Color3.fromRGB(180, 255, 255))
 AbaComoUsar:CreateLabel("4. Use os otimizadores na aba FPS para destravar taxa de quadros e reduzir delay visual.", Color3.fromRGB(180, 255, 255))
 AbaComoUsar:CreateLabel("5. Se o rank nao for detectado, use a aba Rank Manual e clique no seu rank.", Color3.fromRGB(255, 200, 0))
-AbaComoUsar:CreateLabel("6. Clique ou arraste a bolinha flutuante [R] na tela para ocultar ou exibir o painel quando quiser.", Color3.fromRGB(0, 255, 255))
+AbaComoUsar:CreateLabel("6. Use o botao TESTAR para ver qual valor esta sendo usado.", Color3.fromRGB(255, 200, 0))
+AbaComoUsar:CreateLabel("7. Clique ou arraste a bolinha flutuante [R] na tela para ocultar ou exibir o painel.", Color3.fromRGB(0, 255, 255))
 
 AbaDiscord:CreateLabel("Entre na nossa comunidade oficial:", Color3.fromRGB(180, 255, 255))
 AbaDiscord:CreateButton("Copiar link do Discord", function()
