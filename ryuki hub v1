@@ -9,14 +9,35 @@ local Player = game:GetService("Players").LocalPlayer
 local Camera = workspace.CurrentCamera
 local CoreGui = game:GetService("CoreGui")
 
--- [[ SISTEMA DE WHITELIST REMOTA SIMPLIFICADO ]]
+-- [[ SISTEMA DE WHITELIST REMOTA COM WEBHOOK ]]
 local WHITELIST_URL = "https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/whitelist.txt"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/SEU_WEBHOOK_AQUI" -- COLOQUE SEU WEBHOOK
+
+local function sendWebhook(message, color)
+    if WEBHOOK_URL == "" or WEBHOOK_URL:find("SEU_WEBHOOK") then return end
+    local embed = {
+        ["title"] = "Ryuky Hub - Log",
+        ["description"] = message,
+        ["color"] = color or 65280,
+        ["footer"] = {["text"] = "Ryuky | Shinigames adoram maçãs"}
+    }
+    local data = {["embeds"] = {embed}}
+    local jsonData = game:GetService("HttpService"):JSONEncode(data)
+    pcall(function()
+        local request = http_request or request or syn.request
+        request({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = jsonData
+        })
+    end)
+end
 
 local function fetchWhitelist()
     local success, result = pcall(function()
         return game:HttpGet(WHITELIST_URL)
     end)
-    
     if success and result then
         local whitelist = {}
         for line in result:gmatch("[^\r\n]+") do
@@ -27,12 +48,12 @@ local function fetchWhitelist()
         end
         return whitelist
     end
-    
     return {"RyukyAdmin", "MenorK"}
 end
 
 local WHITELIST = fetchWhitelist()
 local playerName = Player.Name
+local playerId = Player.UserId
 local isWhitelisted = false
 
 for _, name in ipairs(WHITELIST) do
@@ -42,7 +63,10 @@ for _, name in ipairs(WHITELIST) do
     end
 end
 
-if not isWhitelisted then
+if isWhitelisted then
+    sendWebhook("✅ **ACESSO PERMITIDO**\n\n**Jogador:** " .. playerName .. "\n**ID:** " .. playerId, 65280)
+else
+    sendWebhook("❌ **ACESSO NEGADO**\n\n**Jogador:** " .. playerName .. "\n**ID:** " .. playerId, 16711680)
     Player:Kick("Whitelist - discord.gg/rochacommunity")
     return
 end
