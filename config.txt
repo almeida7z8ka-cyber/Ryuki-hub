@@ -1,0 +1,2 @@
+URL_WHITELIST=https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/whitelist.txt
+URL_WEBHOOK=https://discord.com/api/webhooks/1507755099517358241/Jj5AoaNDtFjRqqLhhpcoDO6fPdgoc4Zn4yr1EfSfvHRgvbAiWcy8sIc_6vCNda8otHey
