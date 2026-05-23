@@ -9,59 +9,8 @@ local Player = game:GetService("Players").LocalPlayer
 local Camera = workspace.CurrentCamera
 local CoreGui = game:GetService("CoreGui")
 
--- [[ SISTEMA DE WHITELIST REMOTA (URLS EXTERNAS) ]]
-local CONFIG_URL = "https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/config.txt"
-
-local function getConfig()
-    local success, result = pcall(function()
-        return game:HttpGet(CONFIG_URL)
-    end)
-    
-    if success and result then
-        local config = {}
-        for line in result:gmatch("[^\r\n]+") do
-            local key, value = line:match("^(%w+)=(.*)$")
-            if key and value then
-                config[key] = value
-            end
-        end
-        return config
-    end
-    
-    return {
-        URL_WHITELIST = "https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/whitelist.txt",
-        URL_WEBHOOK = ""
-    }
-end
-
-local config = getConfig()
-local WHITELIST_URL = config.URL_WHITELIST
-local WEBHOOK_URL = config.URL_WEBHOOK or ""
-
-local function sendWebhook(message, color)
-    if WEBHOOK_URL == "" then return end
-    
-    local embed = {
-        ["title"] = "Ryuky Hub - Log",
-        ["description"] = message,
-        ["color"] = color or 65280,
-        ["footer"] = {["text"] = "Ryuky | Shinigames adoram maçãs"},
-        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
-    
-    local data = {["embeds"] = {embed}}
-    local jsonData = game:GetService("HttpService"):JSONEncode(data)
-    
-    pcall(function()
-        local request = http_request or request or syn.request
-        request({
-            Url = WEBHOOK_URL,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = jsonData
-        })
-    end)
-end
+-- [[ SISTEMA DE WHITELIST REMOTA SIMPLIFICADO ]]
+local WHITELIST_URL = "https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/whitelist.txt"
 
 local function fetchWhitelist()
     local success, result = pcall(function()
@@ -84,7 +33,6 @@ end
 
 local WHITELIST = fetchWhitelist()
 local playerName = Player.Name
-local playerId = Player.UserId
 local isWhitelisted = false
 
 for _, name in ipairs(WHITELIST) do
@@ -94,11 +42,8 @@ for _, name in ipairs(WHITELIST) do
     end
 end
 
-if isWhitelisted then
-    sendWebhook("✅ **ACESSO PERMITIDO**\n\n**Jogador:** " .. playerName .. "\n**ID:** " .. playerId, 65280)
-else
-    sendWebhook("❌ **ACESSO NEGADO**\n\n**Jogador:** " .. playerName .. "\n**ID:** " .. playerId, 16711680)
-    Player:Kick("Whitelist - Voce nao tem permissao! Discord: discord.gg/rochacommunity")
+if not isWhitelisted then
+    Player:Kick("Whitelist - discord.gg/rochacommunity")
     return
 end
 
@@ -581,18 +526,10 @@ AbaRank:CreateLabel("Se o rank automático falhar,", Color3.fromRGB(255, 200, 0)
 AbaRank:CreateLabel("selecione seu rank aqui:", Color3.fromRGB(255, 200, 0))
 
 local rankButtons = {
-    {"Bronze I", "bronze i"},
-    {"Bronze II", "bronze ii"},
-    {"Bronze III", "bronze iii"},
-    {"Silver I", "silver i"},
-    {"Silver II", "silver ii"},
-    {"Silver III", "silver iii"},
-    {"Gold I", "gold i"},
-    {"Gold II", "gold ii"},
-    {"Gold III", "gold iii"},
-    {"Diamond I", "diamond i"},
-    {"Diamond II", "diamond ii"},
-    {"Diamond III", "diamond iii"}
+    {"Bronze I", "bronze i"}, {"Bronze II", "bronze ii"}, {"Bronze III", "bronze iii"},
+    {"Silver I", "silver i"}, {"Silver II", "silver ii"}, {"Silver III", "silver iii"},
+    {"Gold I", "gold i"}, {"Gold II", "gold ii"}, {"Gold III", "gold iii"},
+    {"Diamond I", "diamond i"}, {"Diamond II", "diamond ii"}, {"Diamond III", "diamond iii"}
 }
 
 for _, rankData in ipairs(rankButtons) do
@@ -656,9 +593,7 @@ AbaFarm:CreateToggle({
 -- ABA HACKS
 AbaHacks:CreateToggle({
     Name = "Ativar Hitbox Bola",
-    Callback = function(Value)
-        _G.HitboxEnabled = Value
-    end
+    Callback = function(Value) _G.HitboxEnabled = Value end
 })
 
 AbaHacks:CreateInput({
@@ -676,16 +611,12 @@ AbaHacks:CreateInput({
 -- ABA PERSONAGEM
 AbaChar:CreateToggle({
     Name = "Directional Jump",
-    Callback = function(Value)
-        _G.DirectionalJump = Value
-    end
+    Callback = function(Value) _G.DirectionalJump = Value end
 })
 
 AbaChar:CreateToggle({
     Name = "Movimento no Ar (Air Move)",
-    Callback = function(Value)
-        _G.AirMoveEnabled = Value
-    end
+    Callback = function(Value) _G.AirMoveEnabled = Value end
 })
 
 AbaChar:CreateInput({
@@ -708,34 +639,25 @@ AbaFPS:CreateToggle({
 
 AbaFPS:CreateToggle({
     Name = "Tela Esticada (1100x1080)",
-    Callback = function(Value)
-        _G.StretchedResEnabled = Value
-    end
+    Callback = function(Value) _G.StretchedResEnabled = Value end
 })
 
 AbaFPS:CreateButton({
     Name = "FPS Boost (Remover Gráficos)",
-    Callback = function()
-        OptimizeGraphics()
-    end
+    Callback = function() OptimizeGraphics() end
 })
 
 AbaFPS:CreateButton({
     Name = "Destravar FPS (Mobile / PC)",
     Callback = function()
-        if setfpscap then
-            setfpscap(999)
-        else
-            game:GetService("Genv").setfpscap(999)
-        end
+        if setfpscap then setfpscap(999)
+        else game:GetService("Genv").setfpscap(999) end
     end
 })
 
 AbaFPS:CreateToggle({
     Name = "Anti-AFK",
-    Callback = function(Value)
-        _G.AntiAFK = Value
-    end
+    Callback = function(Value) _G.AntiAFK = Value end
 })
 
 -- [[ ABAS DE SUPORTE ]]
@@ -752,8 +674,6 @@ AbaComoUsar:CreateLabel("7. Clique em [R] para esconder/mostrar.", Color3.fromRG
 
 AbaDiscord:CreateLabel("Entre na nossa comunidade oficial:", Color3.fromRGB(180, 255, 255))
 AbaDiscord:CreateButton("Copiar link do Discord", function()
-    if setclipboard then
-        setclipboard("discord.gg/rochacommunity")
-    end
+    if setclipboard then setclipboard("discord.gg/rochacommunity") end
 end)
 AbaDiscord:CreateLabel("Link: discord.gg/rochacommunity", Color3.fromRGB(0, 255, 255))
