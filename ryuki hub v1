@@ -114,22 +114,26 @@ local function getPlayerRank()
     return nil
 end
 
+-- VARIÁVEL DE RANK MANUAL (definida aqui para ser acessível)
+local manualRank = nil
+
 local function getBestReward(rewardType)
     local playerRank = nil
     
-    -- PRIMEIRO: tenta detectar automaticamente
-    local autoRank = getPlayerRank()
-    
-    -- SEGUNDO: se não detectou, usa o manual
-    if autoRank then
-        playerRank = autoRank
-        print("[Ryuky] Rank automático: " .. playerRank)
-    elseif manualRank then
+    -- PRIMEIRO: usa o rank manual (se definido)
+    -- SEGUNDO: tenta detectar automaticamente
+    if manualRank then
         playerRank = manualRank
         print("[Ryuky] Rank manual: " .. playerRank)
     else
-        print("[Ryuky] Nenhum rank definido! Usando Bronze I")
-        return RANK_REWARDS[rewardType][1] or 1
+        local autoRank = getPlayerRank()
+        if autoRank then
+            playerRank = autoRank
+            print("[Ryuky] Rank automático: " .. playerRank)
+        else
+            print("[Ryuky] Nenhum rank definido! Usando Bronze I")
+            return RANK_REWARDS[rewardType][1] or 1
+        end
     end
     
     -- Converte o nome do rank para número
@@ -492,9 +496,6 @@ local AbaCreditos = MinhaWindow:CreateTab("Créditos")
 local AbaComoUsar = MinhaWindow:CreateTab("Como Utilizar")
 local AbaDiscord = MinhaWindow:CreateTab("Discord")
 
--- VARIÁVEL DE RANK MANUAL
-local manualRank = nil
-
 -- ABA DE RANK MANUAL
 AbaRank:CreateLabel("Se o rank automático falhar,", Color3.fromRGB(255, 200, 0))
 AbaRank:CreateLabel("selecione seu rank aqui:", Color3.fromRGB(255, 200, 0))
@@ -691,13 +692,13 @@ AbaFPS:CreateToggle({
 AbaCreditos:CreateLabel("Criado por: Ryuki", Color3.fromRGB(0, 255, 255))
 AbaCreditos:CreateLabel("rocha, copia mas nao faz igual", Color3.fromRGB(255, 50, 50))
 
-AbaComoUsar:CreateLabel("1. Ative as funcoes de Auto Farm na primeira aba para coletar spins, yen e skills automaticamente.", Color3.fromRGB(180, 255, 255))
-AbaComoUsar:CreateLabel("2. Ajuste a Hitbox da Bola digitando valores estritos de 1 a 30 na aba Hacks para melhor precisao.", Color3.fromRGB(180, 255, 255))
-AbaComoUsar:CreateLabel("3. Use a aba Personagem para ativar pulos direcionais e movimentacao livre durante o voo da bola.", Color3.fromRGB(180, 255, 255))
-AbaComoUsar:CreateLabel("4. Use os otimizadores na aba FPS para destravar taxa de quadros e reduzir delay visual.", Color3.fromRGB(180, 255, 255))
-AbaComoUsar:CreateLabel("5. Se o rank nao for detectado, use a aba Rank Manual e clique no seu rank.", Color3.fromRGB(255, 200, 0))
-AbaComoUsar:CreateLabel("6. Use o botao TESTAR para ver qual valor esta sendo usado.", Color3.fromRGB(255, 200, 0))
-AbaComoUsar:CreateLabel("7. Clique ou arraste a bolinha flutuante [R] na tela para ocultar ou exibir o painel.", Color3.fromRGB(0, 255, 255))
+AbaComoUsar:CreateLabel("1. Vá na aba Rank Manual e clique no seu rank.", Color3.fromRGB(255, 200, 0))
+AbaComoUsar:CreateLabel("2. Ative as funcoes de Auto Farm na primeira aba.", Color3.fromRGB(180, 255, 255))
+AbaComoUsar:CreateLabel("3. Use o botao TESTAR para verificar se o rank está correto.", Color3.fromRGB(255, 200, 0))
+AbaComoUsar:CreateLabel("4. Ajuste a Hitbox da Bola na aba Hacks.", Color3.fromRGB(180, 255, 255))
+AbaComoUsar:CreateLabel("5. Use a aba Personagem para pulos e movimentacao.", Color3.fromRGB(180, 255, 255))
+AbaComoUsar:CreateLabel("6. Otimize o FPS na aba Seguranca e FPS.", Color3.fromRGB(180, 255, 255))
+AbaComoUsar:CreateLabel("7. Clique em [R] para esconder/mostrar o menu.", Color3.fromRGB(0, 255, 255))
 
 AbaDiscord:CreateLabel("Entre na nossa comunidade oficial:", Color3.fromRGB(180, 255, 255))
 AbaDiscord:CreateButton("Copiar link do Discord", function()
