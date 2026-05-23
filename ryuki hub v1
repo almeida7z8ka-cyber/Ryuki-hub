@@ -52,7 +52,7 @@ Player.CharacterAdded:Connect(setupCharacter)
 local CYAN = Color3.fromRGB(0, 255, 255)
 local CYAN_DARK = Color3.fromRGB(0, 150, 150)
 
--- [[ SISTEMA DE DETECÇÃO DE RANK ]]
+-- [[ SISTEMA DE DETECÇÃO DE RANK - VERSÃO ROBUSTA ]]
 local RANK_REWARDS = {
     LUCKY = {
         [1] = 1,
@@ -93,38 +93,60 @@ local function normalizeRank(text)
 end
 
 local function getPlayerRank()
+    local foundRank = nil
+
+    -- 1. Procura nos leaderstats do jogador (o lugar mais comum)
     local leaderstats = Player:FindFirstChild("leaderstats")
     if leaderstats then
-        local rank = leaderstats:FindFirstChild("Rank") or leaderstats:FindFirstChild("rank") or leaderstats:FindFirstChild("SeasonRank")
-        if rank and rank.Value then
-            return normalizeRank(tostring(rank.Value))
+        for _, child in ipairs(leaderstats:GetChildren()) do
+            -- Aceita "Rank", "SeasonRank", "Tier", "Liga" ou "Division"
+            if child:IsA("StringValue") then
+                foundRank = normalizeRank(child.Value)
+                if RANK_VALUES[foundRank] then
+                    print("[Ryuky] Rank de leaderstats: " .. foundRank)
+                    return foundRank
+                end
+            end
         end
     end
-    
-    local rankFolder = Player:FindFirstChild("Rank") or Player:FindFirstChild("SeasonRank")
-    if rankFolder and rankFolder.Value then
-        return normalizeRank(tostring(rankFolder.Value))
-    end
-    
+
+    -- 2. Procura por qualquer StringValue no jogador que contenha um rank válido
     for _, child in ipairs(Player:GetChildren()) do
-        if child:IsA("StringValue") and (child.Name:lower():find("rank") or child.Name:lower():find("season")) then
-            return normalizeRank(child.Value)
+        if child:IsA("StringValue") then
+            local val = normalizeRank(child.Value)
+            if RANK_VALUES[val] then
+                print("[Ryuky] Rank do jogador: " .. val)
+                return val
+            end
         end
     end
-    
+
+    -- 3. Último recurso: debug completo para você me contar o que achou
+    warn("[Ryuky] Estrutura do jogador não mapeada. Envie o log abaixo:")
+    if leaderstats then
+        for _, c in ipairs(leaderstats:GetChildren()) do
+            warn("leaderstats." .. c.Name .. " = " .. tostring(c.Value))
+        end
+    else
+        warn("leaderstats não encontrado.")
+    end
+    for _, c in ipairs(Player:GetChildren()) do
+        warn("Player." .. c.Name .. " (" .. c.ClassName .. ")")
+    end
     return nil
 end
 
 local function getBestReward(rewardType)
     local playerRank = getPlayerRank()
     if not playerRank then
-        print("[Ryuky] Rank não encontrado, usando recompensa básica (Bronze I)")
+        print("[Ryuky] Rank não encontrado! Usando recompensa básica (Bronze I)")
+        print("[Ryuky] Dica: Ative o toggle e verifique o console (F9) para ver o DEBUG")
         return RANK_REWARDS[rewardType][1] or 1
     end
     
     local rankNumber = RANK_VALUES[playerRank]
     if not rankNumber then
-        print("[Ryuky] Rank não mapeado: " .. playerRank .. ", usando recompensa básica")
+        print("[Ryuky] Rank '" .. playerRank .. "' não está na tabela! Usando recompensa básica")
         return RANK_REWARDS[rewardType][1] or 1
     end
     
@@ -140,7 +162,7 @@ local function getBestReward(rewardType)
     end
     
     if bestReward then
-        print(string.format("[Ryuky] Rank %s detectado! Usando melhor recompensa: %d", playerRank, bestReward))
+        print(string.format("[Ryuky] Rank %s (nível %d) detectado! Recompensa: %d", playerRank, rankNumber, bestReward))
         return bestReward
     else
         return rewards[1] or 1
