@@ -11,10 +11,10 @@ local CoreGui = game:GetService("CoreGui")
 
 -- [[ SISTEMA DE WHITELIST REMOTA COM WEBHOOK ]]
 local WHITELIST_URL = "https://raw.githubusercontent.com/almeida7z8ka-cyber/Ryuki-hub/refs/heads/main/whitelist.txt"
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1507755099517358241/Jj5AoaNDtFjRqqLhhpcoDO6fPdgoc4Zn4yr1EfSfvHRgvbAiWcy8sIc_6vCNda8otHey" -- COLOQUE SEU WEBHOOK
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1507755099517358241/Jj5AoaNDtFjRqqLhhpcoDO6fPdgoc4Zn4yr1EfSfvHRgvbAiWcy8sIc_6vCNda8otHey" -- Coloque seu webhook aqui se quiser
 
 local function sendWebhook(message, color)
-    if WEBHOOK_URL == "" or WEBHOOK_URL:find("SEU_WEBHOOK") then return end
+    if WEBHOOK_URL == "" then return end
     local embed = {
         ["title"] = "Ryuky Hub - Log",
         ["description"] = message,
